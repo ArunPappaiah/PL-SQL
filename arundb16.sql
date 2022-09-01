@@ -201,13 +201,11 @@ WHERE CPI.IDENTIFICATION_DOC_TYPE='PASSPORT';
 
 -- 14) Write a query to display the customer id, customer name, account number, account type, initial deposit,interest who have deposited the maximum amount in the bank.
 
-SELECT CPI.CUSTOMER_ID, CPI.CUSTOMER_NAME, AI.ACCOUNT_NO, BI.BANK_NAME, BI.BRANCH_NAME, CPI.CONTACT_NO, CPI.MAIL_ID
-FROM CUSTOMER_PERSONAL_INFO CPI
-INNER JOIN ACCOUNT_INFO AI
-ON CPI.CUSTOMER_ID=AI.CUSTOMER_ID
-INNER JOIN BANK_INFO BI
-ON BI.IFSC_CODE=AI.IFSC_CODE
-WHERE CPI.ADDRESS LIKE '%BANGALORE';
+SELECT * FROM (SELECT CUSTOMER_PERSONAL_INFO.CUSTOMER_ID, CUSTOMER_PERSONAL_INFO.CUSTOMER_NAME, ACCOUNT_INFO.ACCOUNT_NO,
+ACCOUNT_INFO.ACCOUNT_TYPE, ACCOUNT_INFO.INITIAL_DEPOSIT, ACCOUNT_INFO.INTEREST FROM CUSTOMER_PERSONAL_INFO INNER JOIN ACCOUNT_INFO
+ON CUSTOMER_PERSONAL_INFO.CUSTOMER_ID = ACCOUNT_INFO.CUSTOMER_ID GROUP BY CUSTOMER_PERSONAL_INFO.CUSTOMER_ID,
+CUSTOMER_PERSONAL_INFO.CUSTOMER_NAME, ACCOUNT_INFO.ACCOUNT_NO, ACCOUNT_INFO.ACCOUNT_TYPE, ACCOUNT_INFO.INTEREST
+, ACCOUNT_INFO.INITIAL_DEPOSIT ORDER BY ACCOUNT_INFO.INITIAL_DEPOSIT DESC) WHERE ROWNUM=1;
 
 -- 15) Write a query to display the customer id, customer name, account number, account type, interest, bank name and initial deposit amount of the customers who are getting maximum interest rate.
 
@@ -220,18 +218,19 @@ ACCOUNT_INFO.INITIAL_DEPOSIT ORDER BY ACCOUNT_INFO.INTEREST DESC) WHERE ROWNUM=1
 
 -- 16) Write a query to display the customer id, customer name, account no, bank name, contact no and mail id of the customers who are from BANGALORE.
 
-SELECT ((INTEREST/100)*INITIAL_DEPOSIT) AS INTEREST_AMT, CPI.CUSTOMER_ID, CPI.CUSTOMER_NAME, AI.ACCOUNT_NO, AI.ACCOUNT_TYPE, AI.INTEREST, AI.INITIAL_DEPOSIT
+SELECT CPI.CUSTOMER_ID, CPI.CUSTOMER_NAME, AI.ACCOUNT_NO, BI.BANK_NAME, BI.BRANCH_NAME, CPI.CONTACT_NO, CPI.MAIL_ID
 FROM CUSTOMER_PERSONAL_INFO CPI
 INNER JOIN ACCOUNT_INFO AI
-ON CPI.CUSTOMER_ID=AI.CUSTOMER_ID;
+ON CPI.CUSTOMER_ID=AI.CUSTOMER_ID
+INNER JOIN BANK_INFO BI
+ON BI.IFSC_CODE=AI.IFSC_CODE
+WHERE CPI.ADDRESS LIKE '%BANGALORE';
 
 -- 17) Write a query which will display customer id, bank name, branch name, ifsc code, registration date,activation date of the customers whose activation date is in the month of march (March 1'st to March 31'st).
 
-SELECT CPI.CUSTOMER_ID, CPI.CUSTOMER_NAME, CPI.DATE_OF_BIRTH, CPI.GUARDIAN_NAME, CPI.CONTACT_NO, CPI.MAIL_ID, CRI.REFERENCE_ACC_NAME
-FROM CUSTOMER_PERSONAL_INFO CPI
-INNER JOIN CUSTOMER_REFERENCE_INFO CRI
-ON CPI.CUSTOMER_ID=CRI.CUSTOMER_ID
-WHERE CRI.REFERENCE_ACC_NAME='RAGHUL';
+SELECT CPI.CUSTOMER_ID, BI.BANK_NAME, BI.BRANCH_NAME, BI.IFSC_CODE, AI.REGISTRATION_DATE, AI.ACTIVATION_DATE FROM CUSTOMER_PERSONAL_INFO CPI 
+INNER JOIN ACCOUNT_INFO AI ON CPI.CUSTOMER_ID=AI.CUSTOMER_ID INNER JOIN BANK_INFO BI ON BI.IFSC_CODE=AI.IFSC_CODE 
+WHERE to_char(ACTIVATION_DATE,'MM')=03;
 
 -- 18) Write a query which will calculate the interest amount and display it along with customer id, customer name, account number, account type, interest, and initial deposit amount.
 -- calculate: ((interest/100) * initial deposit amt) with column name 'interest_amt' (alias)
@@ -260,17 +259,11 @@ ORDER BY CUSTOMER_ID DESC;
 -- 21) Write a query which will display account number, account type, customer id, customer name, date of birth, guardian name,contact no, mail id , gender, reference account holders name, reference account holders account number, registration date, 
 -- activation date, number of days between the registration date and activation date with alias name "NoofdaysforActivation", bank name, branch name and initial deposit for all the customers.
 
-SELECT CPI.CUSTOMER_ID, CPI.CUSTOMER_NAME, AI.ACCOUNT_NO, AI.ACCOUNT_TYPE, AI.INTEREST, AI.INITIAL_DEPOSIT,
-CASE
-WHEN INITIAL_DEPOSIT=20000 THEN 'high'
-WHEN INITIAL_DEPOSIT=16000 THEN 'moderate'
-WHEN INITIAL_DEPOSIT=10000 THEN 'average'
-WHEN INITIAL_DEPOSIT=5000 THEN 'low'
-WHEN INITIAL_DEPOSIT=0 THEN 'very low'
-ELSE 'invalid' END DEPOSIT_STATUS
-FROM CUSTOMER_PERSONAL_INFO CPI
-INNER JOIN ACCOUNT_INFO AI
-ON CPI.CUSTOMER_ID=AI.CUSTOMER_ID;
+SELECT AI.ACCOUNT_NO, AI.ACCOUNT_TYPE, CPI.CUSTOMER_ID, CPI.CUSTOMER_NAME, CPI.DATE_OF_BIRTH, CPI.GUARDIAN_NAME, CPI.CONTACT_NO, CPI.MAIL_ID,
+CPI.GENDER, CRI.REFERENCE_ACC_NAME, CRI.REFERENCE_ACC_NO, AI.REGISTRATION_DATE, AI.ACTIVATION_DATE, (ACTIVATION_DATE - REGISTRATION_DATE)
+AS NoofdaysforActivation, BI.BANK_NAME, BI.BRANCH_NAME, AI.INITIAL_DEPOSIT FROM CUSTOMER_PERSONAL_INFO CPI INNER JOIN ACCOUNT_INFO AI
+ON CPI.CUSTOMER_ID=AI.CUSTOMER_ID INNER JOIN BANK_INFO BI ON BI.IFSC_CODE=AI.IFSC_CODE INNER JOIN CUSTOMER_REFERENCE_INFO CRI
+ON CRI.CUSTOMER_ID=CPI.CUSTOMER_ID;
 
 -- 22) Write a query which will display customer id, customer name,  guardian name, identification doc type,reference account holders name, account type, ifsc code, bank name and current balance for the customers who has only the savings account. 
 
@@ -294,7 +287,7 @@ WHEN INITIAL_DEPOSIT=0 THEN 'very low'
 ELSE 'invalid' END DEPOSIT_STATUS
 FROM CUSTOMER_PERSONAL_INFO CPI
 INNER JOIN ACCOUNT_INFO AI
-ON CPI.CUSTOMER_ID=AI.CUSTOMER_ID;
+ON CPI.CUSTOMER_ID=AI.CUSTOMER_ID order by interest desc;
 
 -- 24)Write a query which will display customer id, customer name,  account number, account type, bank name, ifsc code, initial deposit amountand new interest amount for the customers whose name starts with ""J"". Hint:  Formula for calculating ""new interest amount"" is 
 -- if customers account type is savings then add 10 % on current interest amount to interest amount else display the current interest amount.Round the new interest amount to 2 decimals.<br/> Use ""NEW_INTEREST"" as alias name for displaying the new interest amount.
